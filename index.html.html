@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — Guardiões do Tempo</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --accent-cyan: #58a6ff;
+            --accent-green: #238636;
+            --accent-red: #da3633;
+            --accent-purple: #8957e5;
+            --warning-yellow: #d29922;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 700px;
+            position: relative;
+        }
+
+        header {
+            background: #21262d;
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            margin-top: 4px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        button.secondary {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        button.secondary:hover {
+            background: #30363d;
+            color: #fff;
+        }
+
+        .home-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            text-align: center;
+            gap: 15px;
+        }
+
+        .home-menu h2 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .home-menu p {
+            font-size: 0.9rem;
+            color: #8b949e;
+            max-width: 320px;
+            margin-bottom: 20px;
+        }
+
+        #gameCanvas {
+            background: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: var(--bg-color);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .question-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 17, 23, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            z-index: 10;
+        }
+
+        .question-overlay.active {
+            display: flex;
+        }
+
+        .q-badge {
+            background: var(--warning-yellow);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .q-title {
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .q-option {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .q-option:hover {
+            border-color: var(--accent-cyan);
+            background: #30363d;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--accent-cyan);
+            transition: width 1s linear;
+        }
+
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-info h4 {
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .card-info p {
+            font-size: 0.75rem;
+            color: #8b949e;
+            margin-top: 3px;
+        }
+
+        .badge-code {
+            background: var(--accent-purple);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback-msg {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .feedback-msg.success { background: rgba(35, 134, 54, 0.2); border: 1px solid var(--accent-green); color: #4ac26b; }
+        .feedback-msg.error { background: rgba(218, 54, 51, 0.2); border: 1px solid var(--accent-red); color: #f85149; }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+
+        .ranking-table th, .ranking-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .ranking-table th {
+            color: #8b949e;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AURA</h1>
+            <p>Guardiões do Tempo — Edição Histórica</p>
+        </header>
+
+        <!-- TELA 1: MENU INICIAL -->
+        <div id="screen-home" class="screen active">
+            <div class="home-menu">
+                <h2>Missão Temporal</h2>
+                <p>Combata invasores utilizando o pensamento histórico, gerencie sua Aura e proteja a base.</p>
+                <button onclick="goToScreen('screen-student-login')">🚀 JOGAR (Entrar com Código)</button>
+                <button class="secondary" onclick="openProfessorDashboard()">👨‍🏫 MODO PROFESSOR</button>
+            </div>
+        </div>
+
+        <!-- TELA 2: LOGIN DO ALUNO -->
+        <div id="screen-student-login" class="screen">
+            <h3>Entrar na Atividade</h3>
+            <p style="font-size: 0.85rem; color: #8b949e; margin: 8px 0 16px 0;">Digite o código da atividade e seu nome real (para o registro do professor).</p>
+            <div class="form-group">
+                <label>Seu Nome Real</label>
+                <input type="text" id="input-realname" placeholder="Ex: João da Silva">
+            </div>
+            <div class="form-group">
+                <label>Código da Atividade</label>
+                <input type="text" id="input-code" placeholder="Ex: HISTDEFAULT" value="HISTDEFAULT" style="text-transform: uppercase;">
+            </div>
+            <button onclick="startStudentSession()">CONECTAR À MISSÃO</button>
+            <button class="secondary" onclick="goToScreen('screen-home')">Voltar</button>
+        </div>
+
+        <!-- TELA 3: ÁREA DO JOGO -->
+        <div id="screen-game" class="screen" style="padding: 10px;">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div class="game-stats">
+                <span id="stat-identity">🐆 Onça 472</span>
+                <span id="stat-aura">Aura: 50</span>
+                <span id="stat-combo">Combo: ×1</span>
+            </div>
+            <button class="secondary" style="padding: 8px; margin-top: 8px;" onclick="goToScreen('screen-home')">Sair da Partida</button>
+            
+            <!-- OVERLAY DE PERGUNTA -->
+            <div id="question-overlay" class="question-overlay">
+                <div class="q-badge" id="q-theme-badge">História Moderna</div>
+                <div class="q-title" id="q-enunciado">Carregando pergunta...</div>
+                <div id="q-options-container"></div>
+                <div class="timer-bar-container">
+                    <div id="timer-bar" class="timer-bar"></div>
+                </div>
+                <div id="q-feedback-box" style="display: none;" class="feedback-msg"></div>
+            </div>
+        </div>
+
+        <!-- TELA 4: RESULTADO E RANKING (ALUNO) -->
+        <div id="screen-gameover" class="screen" style="text-align: center;">
+            <h2 style="color: var(--accent-red); margin-bottom: 5px;">💥 FIM DA PARTIDA</h2>
+            <p id="gameover-reason" style="margin-bottom: 15px; font-size: 0.85rem; color: #8b949e;">Sua Base Temporal colapsou.</p>
+            
+            <div style="background: var(--bg-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; text-align: left;">
+                <p>Pontuação: <strong id="res-score" style="color: #fff; float: right;">0</strong></p>
+                <p>Maior Combo: <strong id="res-combo" style="color: #fff; float: right;">1</strong></p>
+                <p>Acertos: <strong id="res-acertos" style="color: #fff; float: right;">0</strong></p>
+            </div>
+
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px; text-align: left;">🏆 Ranking da Turma</h4>
+            <div style="background: var(--bg-color); border-radius: 8px; border: 1px solid var(--border-color); padding: 5px; max-height: 160px; overflow-y: auto; margin-bottom: 15px;">
+                <table class="ranking-table">
+                    <thead>
+                        <tr><th>Pos</th><th>Guardião</th><th>Pontos</th></tr>
+                    </thead>
+                    <tbody id="ranking-tbody">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="goToScreen('screen-home')">Voltar ao Início</button>
+        </div>
+
+        <!-- TELA 5: DASHBOARD DO PROFESSOR -->
+        <div id="screen-prof-dashboard" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Painel do Professor</h3>
+                <button class="secondary" style="width: auto; padding: 6px 12px; margin: 0;" onclick="goToScreen('screen-home')">Sair</button>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 10px;">Meus Conjuntos de Questões:</p>
+            <div id="prof-sets-list" class="card-list"></div>
+            <button onclick="openNewSetModal()">+ NOVO CONJUNTO DE QUESTÕES</button>
+
+            <h4 style="margin: 20px 0 10px 0; font-size: 0.95rem;">Relatórios e Turmas Ativas</h4>
+            <div id="prof-reports-list" class="card-list"></div>
+        </div>
+
+        <!-- TELA 6: CRIADOR DE QUESTÕES -->
+        <div id="screen-prof-editor" class="screen">
+            <h3>Criar Novo Conjunto & Questões</h3>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Nome do Conjunto / Tema</label>
+                <input type="text" id="set-name-input" placeholder="Ex: Revolução Industrial">
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+
+            <h4 style="font-size: 0.95rem; margin-bottom: 10px;">Adicionar Questão ao Conjunto</h4>
+            <div class="form-group">
+                <label>Enunciado da Questão</label>
+                <textarea id="q-input-enunciado" rows="3" placeholder="Ex: Qual evento marcou..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Alternativa A</label>
+                <input type="text" id="q-input-a" placeholder="Alternativa A">
+            </div>
+            <div class="form-group">
+                <label>Alternativa B</label>
+                <input type="text" id="q-input-b" placeholder="Alternativa B">
+            </div>
+            <div class="form-group">
+                <label>Alternativa C</label>
+                <input type="text" id="q-input-c" placeholder="Alternativa C">
+            </div>
+            <div class="form-group">
+                <label>Qual é a alternativa correta?</label>
+                <select id="q-input-correct">
+                    <option value="0">Alternativa A</option>
+                    <option value="1">Alternativa B</option>
+                    <option value="2">Alternativa C</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Comentário / Feedback Formativo</label>
+                <input type="text" id="q-input-comment" placeholder="Explicação pedagógica...">
+            </div>
+
+            <button onclick="saveNewQuestion()">+ ADICIONAR QUESTÃO</button>
+            <button class="secondary" onclick="finishCreatingSet()">SALVAR E GERAR CÓDIGO</button>
+        </div>
+    </div>
+
+    <script>
+        let questionSets = JSON.parse(localStorage.getItem('aura_sets')) || [
+            {
+                id: 'HISTDEFAULT',
+                name: 'Revolução Francesa & Contemporâneo',
+                questions: [
+                    { enunciado: "Qual acontecimento marcou o início da Revolução Francesa em 1789?", options: ["Queda da Bastilha", "Congresso de Viena", "Tratado de Versalhes"], correct: 0, comment: "Correto! A Queda da Bastilha simbolizou a derrocada do Antigo Regime." },
+                    { enunciado: "Qual era o principal objetivo do período do Terror?", options: ["Expandir colônias", "Defender a República de inimigos internos e externos", "Restaurar a monarquia"], correct: 1, comment: "Exato! Liderado pelos jacobinos, o governo visava blindar a revolução." }
+                ]
+            }
+        ];
+
+        let matchHistory = JSON.parse(localStorage.getItem('aura_history')) || [];
+
+        let currentSet = null;
+        let currentActiveQuestions = [];
+        let currentIdentity = "";
+        let currentRealName = "";
+        let currentActivityCode = "";
+        
+        let score = 0;
+        let aura = 50;
+        let maxAura = 100;
+        let combo = 1;
+        let missedCountAfterError = 0;
+        let totalAcertos = 0;
+        let maxComboReached = 1;
+
+        function goToScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'screen-game') {
+                initGameSession();
+            } else if(screenId === 'screen-prof-dashboard') {
+                renderProfessorDashboard();
+            }
+        }
+
+        function openProfessorDashboard() {
+            goToScreen('screen-prof-dashboard');
+        }
+
+        function renderProfessorDashboard() {
+            const listSets = document.getElementById('prof-sets-list');
+            listSets.innerHTML = '';
+            questionSets.forEach(set => {
+                listSets.innerHTML += `
+                    <div class="card-item">
+                        <div class="card-info">
+                            <h4>${set.name}</h4>
+                            <p>${set.questions.length} questões cadastradas</p>
+                        </div>
+                        <span class="badge-code">${set.id}</span>
+                    </div>
+                `;
+            });
+
+            const listReports = document.getElementById('prof-reports-list');
+            listReports.innerHTML = '';
+            questionSets.forEach(set => {
+                const setMatches = matchHistory.filter(m => m.activityCode === set.id);
+                listReports.innerHTML += `
+                    <div class="card-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                        <div style="display: flex; width: 100%; justify-content: space-between;">
+                            <h4>Atividade: ${set.name}</h4>
+                            <span class="badge-code">${set.id}</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #8b949e;">Total de participações: <strong>${setMatches.length}</strong></p>
+                        ${fnGetRecentMatchesHTML(setMatches)}
+                    </div>
+                `;
+            });
+        }
+
+        function fnGetRecentMatchesHTML(matches) {
+            if(matches.length === 0) return `<p style="font-size: 0.75rem; font-style: italic;">Nenhum aluno jogou ainda.</p>`;
+            let html = `<table class="ranking-table" style="margin-top: 5px;"><tr><th>Aluno (Real)</th><th>Apelido</th><th>Pontos</th></tr>`;
+            matches.sort((a,b) => b.score - a.score).forEach(m => {
+                html += `<tr><td>${m.realName}</td><td>${m.identity}</td><td>${m.score}</td></tr>`;
+            });
+            html += `</table>`;
+            return html;
+        }
+
+        let tempNewSet = { id: 'HIST' + Math.floor(Math.random()*900+100), name: '', questions: [] };
+
+        function openNewSetModal() {
+            tempNewSet = { id: 'HIST' + Math.floor(Math.random()*900+100), name: '', questions: [] };
+            document.getElementById('set-name-input').value = '';
+            document.getElementById('q-input-enunciado').value = '';
+            document.getElementById('q-input-a').value = '';
+            document.getElementById('q-input-b').value = '';
+            document.getElementById('q-input-c').value = '';
+            document.getElementById('q-input-comment').value = '';
+            goToScreen('screen-prof-editor');
+        }
+
+        function saveNewQuestion() {
+            const setName = document.getElementById('set-name-input').value.trim();
+            const enunciado = document.getElementById('q-input-enunciado').value.trim();
+            const a = document.getElementById('q-input-a').value.trim();
+            const b = document.getElementById('q-input-b').value.trim();
+            const c = document.getElementById('q-input-c').value.trim();
+            const correct = parseInt(document.getElementById('q-input-correct').value);
+            const comment = document.getElementById('q-input-comment').value.trim();
+
+            if(!setName || !enunciado || !a || !b || !c) {
+                alert("Por favor, preencha o nome do conjunto, o enunciado e as alternativas.");
+                return;
+            }
+
+            tempNewSet.name = setName;
+            tempNewSet.questions.push({
+                enunciado: enunciado,
+                options: [a, b, c],
+                correct: correct,
+                comment: comment || "Resposta registrada."
+            });
+
+            alert("Questão adicionada ao conjunto com sucesso!");
+            document.getElementById('q-input-enunciado').value = '';
+            document.getElementById('q-input-a').value = '';
+            document.getElementById('q-input-b').value = '';
+            document.getElementById('q-input-c').value = '';
+            document.getElementById('q-input-comment').value = '';
+        }
+
+        function finishCreatingSet() {
+            if(tempNewSet.questions.length === 0) {
+                alert("Adicione pelo menos uma questão antes de salvar.");
+                return;
+            }
+            questionSets.push(tempNewSet);
+            localStorage.setItem('aura_sets', JSON.stringify(questionSets));
+            alert(`Conjunto criado com sucesso! Código gerado: ${tempNewSet.id}`);
+            openProfessorDashboard();
+        }
+
+        const animaisBrasil = ["Onça-Pintada", "Lobo-Guará", "Arara-Azul", "Boto-Cor-de-Rosa", "Tamanduá-Bandeira", "Tatu-Bola", "Mico-Leão", "Capivara", "Sucuri", "Harpia"];
+
+        function startStudentSession() {
+            const realName = document.getElementById('input-realname').value.trim();
+            const code = document.getElementById('input-code').value.toUpperCase().trim();
+            
+            if(!realName) {
+                alert("Por favor, informe seu nome real para o registro do professor.");
+                return;
+            }
+
+            const foundSet = questionSets.find(s => s.id === code);
+            if(!foundSet) {
+                alert("Código de atividade inválido ou não encontrado. Tente 'HISTDEFAULT'.");
+                return;
+            }
+
+            currentRealName = realName;
+            currentActivityCode = code;
+            currentSet = foundSet;
+            currentActiveQuestions = foundSet.questions;
+
+            const animal = animaisBrasil[Math.floor(Math.random() * animaisBrasil.length)];
+            const numero = Math.floor(Math.random() * 900 + 100);
+            currentIdentity = `🐆 ${animal} ${numero}`;
+            
+            document.getElementById('stat-identity').innerText = currentIdentity;
+            goToScreen('screen-game');
+        }
+
+        let canvas, ctx;
+        let gameInterval = null;
+        let playerX = 180;
+        let invaders = [];
+        let enemySpeed = 1.0;
+        let currentQuestionIndex = 0;
+        let isPausedForQuestion = false;
+        let questionTimerInterval = null;
+        let timeLeft = 15;
+
+        function initGameSession() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            score = 0;
+            aura = 50;
+            combo = 1;
+            totalAcertos = 0;
+            maxComboReached = 1;
+            missedCountAfterError = 0;
+            enemySpeed = 1.0;
+            currentQuestionIndex = 0;
+            playerX = canvas.width / 2 - 15;
+
+            invaders = [];
+            for(let r = 0; r < 3; r++) {
+                for(let c = 0; c < 5; c++) {
+                    invaders.push({
+                        x: 35 + c * 65,
+                        y: 35 + r * 35,
+                        width: 35,
+                        height: 22,
+                        alive: true
+                    });
+                }
+            }
+
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(updateGameLoop, 30);
+            setTimeout(triggerHistoricalDisturbance, 3500);
+        }
+
+        function updateGameLoop() {
+            if(isPausedForQuestion) return;
+
+            let touchWall = false;
+            invaders.forEach(inv => {
+                if(!inv.alive) return;
+                inv.x += 1.2 * enemySpeed;
+                if(inv.x > canvas.width - 45 || inv.x < 10) touchWall = true;
+            });
+
+            if(touchWall) {
+                enemySpeed *= -1;
+                invaders.forEach(inv => inv.y += 12);
+            }
+
+            invaders.forEach(inv => {
+                if(inv.alive && inv.y >= 330) {
+                    aura -= 10;
+                    inv.y = 35;
+                    if(aura <= 0) gameOver("Sua Base Temporal colapsou por falta de Aura.");
+                }
+            });
+
+            drawGameCanvas();
+            updateStatsUI();
+        }
+
+        function drawGameCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#238636';
+            ctx.fillRect(playerX, canvas.height - 25, 40, 15);
+            ctx.fillStyle = '#58a6ff';
+            ctx.fillRect(playerX + 16, canvas.height - 33, 8, 10);
+
+            invaders.forEach(inv => {
+                if(!inv.alive) return;
+                ctx.fillStyle = '#8957e5';
+                ctx.fillRect(inv.x, inv.y, inv.width, inv.height);
+            });
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-aura').innerText = `Aura: ${aura}`;
+            document.getElementById('stat-combo').innerText = `Combo: ×${combo}`;
+        }
+
+        function triggerHistoricalDisturbance() {
+            if(currentActiveQuestions.length === 0) return;
+            isPausedForQuestion = true;
+
+            const q = currentActiveQuestions[currentQuestionIndex % currentActiveQuestions.length];
+            document.getElementById('q-enunciado').innerText = q.enunciado;
+            
+            const optionsContainer = document.getElementById('q-options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((optText, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'q-option';
+                btn.innerHTML = `<strong>[ ${String.fromCharCode(65 + index)} ]</strong> ${optText}`;
+                btn.onclick = () => answerQuestion(index, q.correct, q.comment);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('q-feedback-box').style.display = 'none';
+            document.getElementById('question-overlay').classList.add('active');
+
+            timeLeft = 15;
+            document.getElementById('timer-bar').style.width = '100%';
+            
+            if(questionTimerInterval) clearInterval(questionTimerInterval);
+            questionTimerInterval = setInterval(() => {
+                timeLeft--;
+                let pct = (timeLeft / 15) * 100;
+                document.getElementById('timer-bar').style.width = `${pct}%`;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(questionTimerInterval);
+                    answerQuestion(-1, q.correct, q.comment);
+                }
+            }, 1000);
+        }
+
+        function answerQuestion(selectedIndex, correctIndex, comment) {
+            clearInterval(questionTimerInterval);
+            const isCorrect = (selectedIndex === correctIndex);
+            
+            const feedbackBox = document.getElementById('q-feedback-box');
+            feedbackBox.style.display = 'block';
+
+            if(isCorrect) {
+                totalAcertos++;
+                feedbackBox.className = "feedback-msg success";
+                feedbackBox.innerHTML = `<strong>⚡ ACERTO!</strong> ${comment}`;
+                
+                let auraGain = (combo === 1) ? 10 : Math.min(10 + (combo - 1) * 5, 30);
+                if(missedCountAfterError > 0) {
+                    auraGain = Math.max(5, auraGain - 5);
+                    missedCountAfterError--;
+                }
+                aura = Math.min(maxAura, aura + auraGain);
+                score += 100 + (combo * 20);
+                combo++;
+                if(combo > maxComboReached) maxComboReached = combo;
+                enemySpeed = Math.max(0.6, enemySpeed * 0.85);
+            } else {
+                feedbackBox.className = "feedback-msg error";
+                feedbackBox.innerHTML = `❌ <strong>ERRO / TIMEOUT!</strong> ${comment}`;
+                combo = 1;
+                missedCountAfterError = 3;
+                enemySpeed = Math.min(2.0, enemySpeed * 1.20);
+            }
+
+            currentQuestionIndex++;
+
+            setTimeout(() => {
+                document.getElementById('question-overlay').classList.remove('active');
+                isPausedForQuestion = false;
+                setTimeout(triggerHistoricalDisturbance, 10000);
+            }, 3000);
+        }
+
+        function gameOver(reason) {
+            clearInterval(gameInterval);
+            if(questionTimerInterval) clearInterval(questionTimerInterval);
+            document.getElementById('question-overlay').classList.remove('active');
+
+            document.getElementById('gameover-reason').innerText = reason;
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-combo').innerText = maxComboReached;
+            document.getElementById('res-acertos').innerText = totalAcertos;
+
+            const matchRecord = {
+                realName: currentRealName,
+                identity: currentIdentity,
+                activityCode: currentActivityCode,
+                score: score,
+                acertos: totalAcertos
+            };
+            matchHistory.push(matchRecord);
+            localStorage.setItem('aura_history', JSON.stringify(matchHistory));
+
+            renderClassRanking(currentActivityCode);
+
+            goToScreen('screen-gameover');
+        }
+
+        function renderClassRanking(code) {
+            const tbody = document.getElementById('ranking-tbody');
+            tbody.innerHTML = '';
+            
+            const classMatches = matchHistory
+                .filter(m => m.activityCode === code)
+                .sort((a, b) => b.score - a.score);
+
+            classMatches.forEach((m, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}º</td>
+                        <td>${m.identity}</td>
+                        <td><strong>${m.score}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
